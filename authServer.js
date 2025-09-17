@@ -10,8 +10,11 @@ let refreshTokens = []
 
 app.post("/token", (req, res) => {
     const refreshToken = req.body.token
+    // token is null
     if (refreshToken == null) return res.sendStatus(401)
+    // token does not exist
     if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403)
+    // verify the refresh token
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) return res.sendStatus(403)
         const accessToken = generateAccessToken({ name: user.name })
@@ -31,6 +34,9 @@ app.post("/login", (req, res) => {
     const user = { name: username }
 
     const accessToken = generateAccessToken(user)
+    // refresh token will be generated and added to the array each time when user login
+    // please do not follow this code to write your auth logic in production
+    // in production, we need to add expire time (usually 30d), and only one refresh token per user.
     const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
     refreshTokens.push(refreshToken)
     res.json({ accessToken: accessToken, refreshToken: refreshToken })
